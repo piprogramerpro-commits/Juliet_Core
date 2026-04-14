@@ -6,12 +6,17 @@ import requests
 
 app = FastAPI()
 
-app.mount("/static", StaticFiles(directory="frontend"), name="static")
+# Static files (favicon, etc)
+app.mount("/static", StaticFiles(directory="frontend/static"), name="static")
 
 GROQ_API_KEY = os.getenv("GROQ_API_KEY")
 
-def groq(prompt):
+# IA con fallback
+def brain(prompt):
     try:
+        if not GROQ_API_KEY:
+            return "IA sin API key configurada."
+
         res = requests.post(
             "https://api.groq.com/openai/v1/chat/completions",
             headers={
@@ -21,16 +26,25 @@ def groq(prompt):
             json={
                 "model": "llama3-8b-8192",
                 "messages": [{"role": "user", "content": prompt}]
-            }
+            },
+            timeout=10
         )
-        return res.json()["choices"][0]["message"]["content"]
-    except:
-        return "Error en Groq"
 
+        data = res.json()
+        return data["choices"][0]["message"]["content"]
+
+    except Exception as e:
+        return f"Fallback activo: {prompt[:50]}"
+
+# Streaming seguro
 def generate(prompt):
-    response = groq(prompt)
-    for w in response.split():
-        yield w + " "
+    response = brain(prompt)
+
+    if not response:
+        response = "No hay respuesta disponible."
+
+    for word in response.split():
+        yield word + " "
 
 @app.get("/", response_class=HTMLResponse)
 def home():
@@ -39,3 +53,11 @@ def home():
 @app.get("/chat")
 def chat(prompt: str):
     return StreamingResponse(generate(prompt), media_type="text/plain")
+
+@app.get("/api")
+def api():
+    return {
+        "status": "online",
+        "version": "V21",
+        "ai": "Groq + fallback"
+    }
