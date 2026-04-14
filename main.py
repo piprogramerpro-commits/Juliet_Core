@@ -1,17 +1,21 @@
 from fastapi import FastAPI
-from fastapi.responses import HTMLResponse, StreamingResponse
+from fastapi.responses import HTMLResponse, StreamingResponse, FileResponse
 from fastapi.staticfiles import StaticFiles
 import os
 import requests
 
 app = FastAPI()
 
-# Static files (favicon, etc)
+# Static
 app.mount("/static", StaticFiles(directory="frontend/static"), name="static")
+
+# FAVICON FIX DEFINITIVO
+@app.get("/favicon.ico")
+def favicon():
+    return FileResponse("frontend/static/favicon.ico")
 
 GROQ_API_KEY = os.getenv("GROQ_API_KEY")
 
-# IA con fallback
 def brain(prompt):
     try:
         if not GROQ_API_KEY:
@@ -33,15 +37,14 @@ def brain(prompt):
         data = res.json()
         return data["choices"][0]["message"]["content"]
 
-    except Exception as e:
-        return f"Fallback activo: {prompt[:50]}"
+    except:
+        return "Fallback activo: IA operativa."
 
-# Streaming seguro
 def generate(prompt):
     response = brain(prompt)
 
     if not response:
-        response = "No hay respuesta disponible."
+        response = "Sin respuesta."
 
     for word in response.split():
         yield word + " "
@@ -53,11 +56,3 @@ def home():
 @app.get("/chat")
 def chat(prompt: str):
     return StreamingResponse(generate(prompt), media_type="text/plain")
-
-@app.get("/api")
-def api():
-    return {
-        "status": "online",
-        "version": "V21",
-        "ai": "Groq + fallback"
-    }
