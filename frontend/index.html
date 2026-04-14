@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Juliet V21</title>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+
+<style>
+body {
+    margin: 0;
+    background: #343541;
+    color: white;
+    font-family: Arial;
+}
+
+.topbar {
+    padding: 10px;
+    background: #202123;
+    display: flex;
+    justify-content: space-between;
+}
+
+button {
+    background: #10a37f;
+    border: none;
+    padding: 10px;
+    color: white;
+    cursor: pointer;
+}
+
+.chat {
+    height: 70vh;
+    overflow-y: auto;
+    padding: 20px;
+}
+
+.input {
+    display: flex;
+}
+
+input {
+    flex: 1;
+    padding: 10px;
+}
+
+#viewer {
+    width: 100%;
+    height: 300px;
+}
+</style>
+</head>
+
+<body>
+
+<div class="topbar">
+    <div>Juliet V21</div>
+    <button onclick="open3D()">🌍 3D</button>
+</div>
+
+<div class="chat" id="chat"></div>
+
+<div class="input">
+    <input id="prompt">
+    <button onclick="send()">➤</button>
+</div>
+
+<div id="viewer"></div>
+
+<script>
+async function send(){
+    let input = document.getElementById("prompt");
+    let text = input.value;
+
+    let res = await fetch("/chat?prompt=" + encodeURIComponent(text));
+    let reader = res.body.getReader();
+    let decoder = new TextDecoder();
+
+    let chat = document.getElementById("chat");
+    let div = document.createElement("div");
+    chat.appendChild(div);
+
+    while(true){
+        const {done, value} = await reader.read();
+        if(done) break;
+        div.innerHTML += decoder.decode(value);
+    }
+}
+
+function open3D(){
+    const scene = new THREE.Scene();
+    const camera = new THREE.PerspectiveCamera(75, window.innerWidth/300, 0.1, 1000);
+
+    const renderer = new THREE.WebGLRenderer();
+    renderer.setSize(window.innerWidth, 300);
+    document.getElementById("viewer").innerHTML = "";
+    document.getElementById("viewer").appendChild(renderer.domElement);
+
+    const geometry = new THREE.BoxGeometry();
+    const material = new THREE.MeshBasicMaterial({color: 0x00ff00});
+    const cube = new THREE.Mesh(geometry, material);
+
+    scene.add(cube);
+    camera.position.z = 5;
+
+    function animate(){
+        requestAnimationFrame(animate);
+        cube.rotation.x += 0.01;
+        cube.rotation.y += 0.01;
+        renderer.render(scene, camera);
+    }
+
+    animate();
+}
+</script>
+
+</body>
+</html>
