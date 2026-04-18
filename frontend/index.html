@@ -2,15 +2,10 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>Juliet V28</title>
+<title>Juliet V29</title>
 
 <style>
-body {
-    margin:0;
-    background:#0f172a;
-    color:white;
-    font-family:Arial;
-}
+body { margin:0; background:#0f172a; color:white; font-family:Arial; }
 
 .topbar {
     padding:15px;
@@ -19,33 +14,16 @@ body {
     justify-content:space-between;
 }
 
-.chat {
-    height:80vh;
-    overflow:auto;
-    padding:20px;
-}
+.chat { height:80vh; overflow:auto; padding:20px; }
 
-.msg {
-    margin:10px 0;
-    padding:10px;
-    border-radius:10px;
-}
+.msg { margin:10px 0; padding:10px; border-radius:10px; }
 
 .user { background:#1f2937; }
 .bot { background:#2563eb; }
 
-.input {
-    display:flex;
-    padding:10px;
-    background:#111827;
-}
+.input { display:flex; padding:10px; background:#111827; }
 
-input {
-    flex:1;
-    padding:10px;
-    border:none;
-    border-radius:5px;
-}
+input { flex:1; padding:10px; border:none; border-radius:5px; }
 
 button {
     margin-left:10px;
@@ -56,13 +34,13 @@ button {
     border-radius:5px;
 }
 </style>
-
 </head>
 
 <body>
 
 <div class="topbar">
-    <b>Juliet V28</b>
+    <b>Juliet V29</b>
+    <button onclick="openLearning()">🧠</button>
 </div>
 
 <div id="chat" class="chat"></div>
@@ -96,6 +74,24 @@ async function send(){
         botDiv.innerHTML += decoder.decode(value);
         chat.scrollTop = chat.scrollHeight;
     }
+}
+
+async function openLearning(){
+    let res = await fetch("/learning");
+    let data = await res.json();
+
+    let win = window.open("", "_blank");
+    win.document.write("<h1>Aprendizaje IA</h1>");
+
+    data.slice(-20).reverse().forEach(item => {
+        win.document.write(`
+            <div style="margin:10px;padding:10px;border:1px solid #ccc">
+                <b>Prompt:</b> ${item.prompt}<br>
+                <b>Respuesta:</b> ${item.response}<br>
+                <b>Calidad:</b> ${item.quality}
+            </div>
+        `);
+    });
 }
 </script>
 
