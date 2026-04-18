@@ -2,138 +2,100 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>Juliet V21</title>
-
-<link rel="icon" href="/favicon.ico">
-
-<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<title>Juliet V28</title>
 
 <style>
 body {
-    margin: 0;
-    background: #343541;
-    color: white;
-    font-family: Arial;
+    margin:0;
+    background:#0f172a;
+    color:white;
+    font-family:Arial;
 }
 
 .topbar {
-    background: #202123;
-    padding: 10px;
-    display: flex;
-    justify-content: space-between;
+    padding:15px;
+    background:#111827;
+    display:flex;
+    justify-content:space-between;
 }
 
 .chat {
-    height: 65vh;
-    overflow-y: auto;
-    padding: 20px;
+    height:80vh;
+    overflow:auto;
+    padding:20px;
 }
 
-.msg { margin: 10px 0; }
-.user { color: #4ade80; }
-.ai { color: #60a5fa; }
+.msg {
+    margin:10px 0;
+    padding:10px;
+    border-radius:10px;
+}
+
+.user { background:#1f2937; }
+.bot { background:#2563eb; }
 
 .input {
-    display: flex;
-    background: #40414f;
-    padding: 10px;
+    display:flex;
+    padding:10px;
+    background:#111827;
 }
 
 input {
-    flex: 1;
-    background: transparent;
-    border: none;
-    color: white;
-    outline: none;
+    flex:1;
+    padding:10px;
+    border:none;
+    border-radius:5px;
 }
 
 button {
-    background: #10a37f;
-    border: none;
-    padding: 10px;
-    color: white;
-    cursor: pointer;
-}
-
-#viewer {
-    height: 300px;
+    margin-left:10px;
+    padding:10px;
+    background:#2563eb;
+    border:none;
+    color:white;
+    border-radius:5px;
 }
 </style>
+
 </head>
 
 <body>
 
 <div class="topbar">
-    <div><b>Juliet V21 🚀</b></div>
-    <button onclick="open3D()">🌍</button>
+    <b>Juliet V28</b>
 </div>
 
-<div class="chat" id="chat"></div>
+<div id="chat" class="chat"></div>
 
 <div class="input">
-    <input id="prompt" placeholder="Escribe algo...">
-    <button onclick="send()">➤</button>
+    <input id="input" placeholder="Escribe...">
+    <button onclick="send()">Enviar</button>
 </div>
-
-<div id="viewer"></div>
 
 <script>
 async function send(){
-    const input = document.getElementById("prompt");
-    const text = input.value;
+    let input = document.getElementById("input");
+    let chat = document.getElementById("chat");
 
-    if(!text) return;
+    let text = input.value;
+    input.value = "";
 
-    const chat = document.getElementById("chat");
+    chat.innerHTML += `<div class="msg user">${text}</div>`;
 
-    chat.innerHTML += `<div class="msg user">Tú: ${text}</div>`;
+    let res = await fetch("/chat?prompt=" + encodeURIComponent(text));
+    let reader = res.body.getReader();
+    let decoder = new TextDecoder();
 
-    const res = await fetch("/chat?prompt=" + encodeURIComponent(text));
-    const reader = res.body.getReader();
-    const decoder = new TextDecoder();
-
-    let div = document.createElement("div");
-    div.className = "msg ai";
-    div.innerHTML = "Juliet: ";
-    chat.appendChild(div);
+    let botDiv = document.createElement("div");
+    botDiv.className = "msg bot";
+    chat.appendChild(botDiv);
 
     while(true){
         const {done, value} = await reader.read();
         if(done) break;
-        div.innerHTML += decoder.decode(value);
+        botDiv.innerHTML += decoder.decode(value);
+        chat.scrollTop = chat.scrollHeight;
     }
-
-    input.value = "";
-}
-
-let renderer;
-
-function open3D(){
-    const viewer = document.getElementById("viewer");
-    viewer.innerHTML = "";
-
-    const scene = new THREE.Scene();
-    const camera = new THREE.PerspectiveCamera(75, viewer.clientWidth/300, 0.1, 1000);
-
-    renderer = new THREE.WebGLRenderer();
-    renderer.setSize(viewer.clientWidth, 300);
-    viewer.appendChild(renderer.domElement);
-
-    const geometry = new THREE.BoxGeometry();
-    const material = new THREE.MeshNormalMaterial();
-    const cube = new THREE.Mesh(geometry, material);
-
-    scene.add(cube);
-    camera.position.z = 5;
-
-    function animate(){
-        requestAnimationFrame(animate);
-        cube.rotation.x += 0.01;
-        cube.rotation.y += 0.01;
-        renderer.render(scene, camera);
-    }
-
-    animate();
 }
 </script>
 

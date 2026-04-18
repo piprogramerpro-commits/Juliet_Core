@@ -1,16 +1,20 @@
-from personality.personality import style_response
+from memory.memory import get_memory
 
-def process_input(user_input: str, user="default"):
+def generate_response(prompt):
+    memory = get_memory()
 
-    if not user_input:
-        return "Juliet: No he recibido nada."
+    relevant = [m for m in memory if prompt.lower() in m["user"].lower()]
+    context = "\n".join([f"{m['user']} -> {m['ai']}" for m in relevant[-3:]])
 
-    text = user_input.lower()
+    response = f"""
+**Respuesta**
+{prompt}
 
-    if "hola" in text:
-        return style_response("Hola. Estoy contigo.", None)
+**Contexto aprendido**
+{context if context else "Aprendiendo..."}
 
-    if "qué eres" in text:
-        return style_response("Soy Juliet, un sistema en evolución controlada.", None)
+**Explicación**
+Estoy mejorando usando conversaciones pasadas.
+"""
 
-    return style_response(f"He entendido: {user_input}", None)
+    return response
