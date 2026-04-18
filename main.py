@@ -1,31 +1,63 @@
 from fastapi import FastAPI
 from fastapi.responses import HTMLResponse, StreamingResponse
-import time
-import json
-
-from learning.brain import remember, learn, improve
+import time, json, os
 
 app = FastAPI()
 
-def base_brain(prompt):
-    return f"🤖 Juliet\n\nHe procesado tu mensaje:\n\n{prompt}"
+# 🔒 aseguramos archivos
+os.makedirs("memory", exist_ok=True)
+os.makedirs("learning", exist_ok=True)
+
+if not os.path.exists("memory/memory.json"):
+    open("memory/memory.json", "w").write("[]")
+
+if not os.path.exists("learning/learning.json"):
+    open("learning/learning.json", "w").write("[]")
+
+
+def load(file):
+    try:
+        return json.load(open(file))
+    except:
+        return []
+
+def save(file, data):
+    json.dump(data, open(file, "w"))
+
 
 def brain(prompt):
-    improved = improve(prompt)
+    memory = load("memory/memory.json")
 
-    if improved:
-        return f"🧠 (memoria)\n\n{improved}"
+    # 🔁 reutilizar si ya existe
+    for item in reversed(memory):
+        if prompt.lower() in item["prompt"].lower():
+            return "(memoria)\n\n" + item["response"]
 
-    response = base_brain(prompt)
+    response = f"🤖 Juliet\n\n{prompt}"
 
-    remember(prompt, response)
-    learn(prompt, response)
+    # guardar memoria
+    memory.append({"prompt": prompt, "response": response})
+    save("memory/memory.json", memory[-100:])
+
+    # aprendizaje
+    learn = load("learning/learning.json")
+    learn.append({
+        "prompt": prompt,
+        "response": response,
+        "quality": len(response)
+    })
+    save("learning/learning.json", learn[-200:])
 
     return response
 
+
 @app.get("/")
 def home():
-    return HTMLResponse(open("frontend/index.html").read())
+    try:
+        return HTMLResponse(open("frontend/index.html").read())
+    except:
+        return "Frontend no encontrado"
+
 
 @app.get("/chat")
 def chat(prompt: str):
@@ -36,9 +68,7 @@ def chat(prompt: str):
             time.sleep(0.01)
     return StreamingResponse(stream(), media_type="text/plain")
 
+
 @app.get("/learning")
-def learning_data():
-    try:
-        return json.load(open("learning/learning.json"))
-    except:
-        return []
+def learning():
+    return load("learning/learning.json")

@@ -2,7 +2,7 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>Juliet V29</title>
+<title>Juliet V30</title>
 
 <style>
 body { margin:0; background:#0f172a; color:white; font-family:Arial; }
@@ -39,14 +39,14 @@ button {
 <body>
 
 <div class="topbar">
-    <b>Juliet V29</b>
+    <b>Juliet V30</b>
     <button onclick="openLearning()">🧠</button>
 </div>
 
 <div id="chat" class="chat"></div>
 
 <div class="input">
-    <input id="input" placeholder="Escribe...">
+    <input id="input" placeholder="Escribe..." onkeydown="if(event.key==='Enter') send()">
     <button onclick="send()">Enviar</button>
 </div>
 
@@ -55,12 +55,20 @@ async function send(){
     let input = document.getElementById("input");
     let chat = document.getElementById("chat");
 
+    if(!input.value) return;
+
     let text = input.value;
     input.value = "";
 
     chat.innerHTML += `<div class="msg user">${text}</div>`;
 
     let res = await fetch("/chat?prompt=" + encodeURIComponent(text));
+
+    if(!res.body){
+        chat.innerHTML += `<div class="msg bot">Error de respuesta</div>`;
+        return;
+    }
+
     let reader = res.body.getReader();
     let decoder = new TextDecoder();
 
