@@ -2,7 +2,7 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>Juliet V30</title>
+<title>Juliet V32</title>
 
 <style>
 body { margin:0; background:#0f172a; color:white; font-family:Arial; }
@@ -10,20 +10,38 @@ body { margin:0; background:#0f172a; color:white; font-family:Arial; }
 .topbar {
     padding:15px;
     background:#111827;
-    display:flex;
-    justify-content:space-between;
+    text-align:center;
+    font-weight:bold;
 }
 
-.chat { height:80vh; overflow:auto; padding:20px; }
+.chat {
+    height:80vh;
+    overflow:auto;
+    padding:20px;
+}
 
-.msg { margin:10px 0; padding:10px; border-radius:10px; }
+.msg {
+    margin:10px 0;
+    padding:12px;
+    border-radius:10px;
+    max-width:70%;
+}
 
-.user { background:#1f2937; }
+.user { background:#1f2937; margin-left:auto; }
 .bot { background:#2563eb; }
 
-.input { display:flex; padding:10px; background:#111827; }
+.input {
+    display:flex;
+    padding:10px;
+    background:#111827;
+}
 
-input { flex:1; padding:10px; border:none; border-radius:5px; }
+input {
+    flex:1;
+    padding:10px;
+    border:none;
+    border-radius:5px;
+}
 
 button {
     margin-left:10px;
@@ -32,21 +50,19 @@ button {
     border:none;
     color:white;
     border-radius:5px;
+    cursor:pointer;
 }
 </style>
 </head>
 
 <body>
 
-<div class="topbar">
-    <b>Juliet V30</b>
-    <button onclick="openLearning()">🧠</button>
-</div>
+<div class="topbar">Juliet V32</div>
 
 <div id="chat" class="chat"></div>
 
 <div class="input">
-    <input id="input" placeholder="Escribe..." onkeydown="if(event.key==='Enter') send()">
+    <input id="input" placeholder="Habla con Juliet..." onkeydown="if(event.key==='Enter') send()">
     <button onclick="send()">Enviar</button>
 </div>
 
@@ -63,12 +79,6 @@ async function send(){
     chat.innerHTML += `<div class="msg user">${text}</div>`;
 
     let res = await fetch("/chat?prompt=" + encodeURIComponent(text));
-
-    if(!res.body){
-        chat.innerHTML += `<div class="msg bot">Error de respuesta</div>`;
-        return;
-    }
-
     let reader = res.body.getReader();
     let decoder = new TextDecoder();
 
@@ -82,24 +92,6 @@ async function send(){
         botDiv.innerHTML += decoder.decode(value);
         chat.scrollTop = chat.scrollHeight;
     }
-}
-
-async function openLearning(){
-    let res = await fetch("/learning");
-    let data = await res.json();
-
-    let win = window.open("", "_blank");
-    win.document.write("<h1>Aprendizaje IA</h1>");
-
-    data.slice(-20).reverse().forEach(item => {
-        win.document.write(`
-            <div style="margin:10px;padding:10px;border:1px solid #ccc">
-                <b>Prompt:</b> ${item.prompt}<br>
-                <b>Respuesta:</b> ${item.response}<br>
-                <b>Calidad:</b> ${item.quality}
-            </div>
-        `);
-    });
 }
 </script>
 
