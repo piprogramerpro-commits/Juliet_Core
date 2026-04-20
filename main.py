@@ -4,24 +4,41 @@ import os, json, time
 
 app = FastAPI()
 
-# --- setup seguro ---
 os.makedirs("memory", exist_ok=True)
 os.makedirs("learning", exist_ok=True)
 
-def safe_load(file):
+def load(file):
     try:
         return json.load(open(file))
     except:
         return []
 
-def safe_save(file, data):
+def save(file, data):
     json.dump(data, open(file, "w"))
 
-# --- IA REAL (Groq) ---
+# 🔥 prompt profesional
+SYSTEM_PROMPT = """
+Eres Juliet, una IA avanzada experta en programación.
+
+Reglas:
+- Responde SIEMPRE claro, estructurado y útil
+- Usa títulos en negrita
+- Explica primero brevemente
+- Luego da el código
+- Luego da mejoras
+
+Ciberseguridad:
+- SOLO defensiva (detección, protección, buenas prácticas)
+- Nunca generes código ofensivo o ilegal
+
+Especialidades:
+- Python, APIs, IA, automatización
+- optimización y debugging
+"""
+
 def call_ai(prompt):
     try:
         import requests
-
         API_KEY = os.getenv("GROQ_API_KEY")
 
         if not API_KEY:
@@ -35,7 +52,10 @@ def call_ai(prompt):
             },
             json={
                 "model": "llama3-70b-8192",
-                "messages": [{"role": "user", "content": prompt}]
+                "messages": [
+                    {"role": "system", "content": SYSTEM_PROMPT},
+                    {"role": "user", "content": prompt}
+                ]
             }
         )
 
@@ -44,38 +64,34 @@ def call_ai(prompt):
     except:
         return None
 
-# --- cerebro ---
 def brain(prompt):
-    memory = safe_load("memory/memory.json")
+    memory = load("memory/memory.json")
 
-    # memoria
+    # memoria inteligente
     for item in reversed(memory):
         if prompt.lower() in item["prompt"].lower():
             return "(memoria)\n\n" + item["response"]
 
-    # IA real
     response = call_ai(prompt)
 
-    # fallback si falla
     if not response:
-        response = f"🤖 Juliet\n\nEstoy funcionando en modo local.\n\nHas dicho: {prompt}"
+        response = f"🤖 Juliet\n\nModo local activo.\n\nPregunta: {prompt}"
 
-    # guardar memoria
+    # guardar
     memory.append({"prompt": prompt, "response": response})
-    safe_save("memory/memory.json", memory[-100:])
+    save("memory/memory.json", memory[-100:])
 
     # aprendizaje
-    learn = safe_load("learning/learning.json")
+    learn = load("learning/learning.json")
     learn.append({
         "prompt": prompt,
         "response": response,
-        "quality": len(response)
+        "score": len(response)
     })
-    safe_save("learning/learning.json", learn[-200:])
+    save("learning/learning.json", learn[-200:])
 
     return response
 
-# --- rutas ---
 @app.get("/")
 def home():
     return HTMLResponse(open("frontend/index.html").read())
@@ -84,11 +100,7 @@ def home():
 def chat(prompt: str):
     def stream():
         text = brain(prompt)
-        for word in text.split():
-            yield word + " "
+        for chunk in text.split():
+            yield chunk + " "
             time.sleep(0.01)
     return StreamingResponse(stream(), media_type="text/plain")
-
-@app.get("/learning")
-def learning():
-    return safe_load("learning/learning.json")
