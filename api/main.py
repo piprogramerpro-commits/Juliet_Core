@@ -4,6 +4,14 @@ from fastapi.middleware.cors import CORSMiddleware
 import os
 import requests
 import json
+from fastapi.responses import HTMLResponse
+import os
+
+@app.get("/")
+def home():
+    if os.path.exists("frontend/index.html"):
+        return HTMLResponse(open("frontend/index.html").read())
+    return {"error": "frontend no encontrado"}
 
 app = FastAPI()
 
