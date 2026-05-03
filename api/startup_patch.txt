@@ -1,0 +1,8 @@
+from thinker.loop import internal_thought_loop
+import threading
+
+@app.on_event("startup")
+def start_thinker():
+    thread = threading.Thread(target=internal_thought_loop)
+    thread.daemon = True
+    thread.start()

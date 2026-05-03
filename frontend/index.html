@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Juliet V33</title>
+
+<style>
+body {
+    margin:0;
+    background:#343541;
+    color:white;
+    font-family:Arial;
+}
+
+.chat {
+    max-width:800px;
+    margin:auto;
+    padding:20px;
+}
+
+.msg {
+    margin:15px 0;
+    padding:15px;
+    border-radius:10px;
+}
+
+.user { background:#444654; }
+.bot { background:#202123; }
+
+.inputBox {
+    position:fixed;
+    bottom:0;
+    width:100%;
+    background:#40414f;
+    padding:15px;
+    display:flex;
+}
+
+input {
+    flex:1;
+    padding:10px;
+    border:none;
+    border-radius:5px;
+}
+
+button {
+    margin-left:10px;
+    padding:10px;
+    background:#19c37d;
+    border:none;
+    color:white;
+    border-radius:5px;
+}
+</style>
+</head>
+
+<body>
+
+<div id="chat" class="chat"></div>
+
+<div class="inputBox">
+    <input id="input" placeholder="Pregúntale a Juliet..." onkeydown="if(event.key==='Enter') send()">
+    <button onclick="send()">Enviar</button>
+</div>
+
+<script>
+async function send(){
+    let input = document.getElementById("input");
+    let chat = document.getElementById("chat");
+
+    if(!input.value) return;
+
+    let text = input.value;
+    input.value = "";
+
+    chat.innerHTML += `<div class="msg user">${text}</div>`;
+
+    let res = await fetch("/chat?prompt=" + encodeURIComponent(text));
+    let reader = res.body.getReader();
+    let decoder = new TextDecoder();
+
+    let botDiv = document.createElement("div");
+    botDiv.className = "msg bot";
+    chat.appendChild(botDiv);
+
+    while(true){
+        const {done, value} = await reader.read();
+        if(done) break;
+        botDiv.innerHTML += decoder.decode(value);
+        chat.scrollTop = chat.scrollHeight;
+    }
+}
+</script>
+
+</body>
+</html>

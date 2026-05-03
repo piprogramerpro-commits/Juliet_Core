@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Juliet Login</title>
+
+<style>
+body {
+    font-family: system-ui;
+    background: #0f0f0f;
+    color: white;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+}
+
+.box {
+    background: #1c1c1c;
+    padding: 30px;
+    border-radius: 16px;
+    width: 300px;
+}
+
+input, button {
+    width: 100%;
+    padding: 10px;
+    margin-top: 10px;
+}
+</style>
+</head>
+
+<body>
+
+<div class="box">
+<h2>Juliet Login</h2>
+<input id="user" placeholder="usuario">
+<button onclick="enter()">Entrar</button>
+</div>
+
+<script>
+function enter(){
+    const u = document.getElementById("user").value;
+    localStorage.setItem("user", u);
+    window.location = "/chat.html";
+}
+</script>
+
+</body>
+</html>
+
+function speak(text){
+    const utter = new SpeechSynthesisUtterance(text);
+    utter.lang = "es-ES";
+    utter.rate = 1;
+    speechSynthesis.speak(utter);
+}
+
+bubble.innerText = result;
+speak(result);
