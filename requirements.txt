@@ -1,12 +1,4 @@
-<<<<<<< HEAD
 flask
 gunicorn
-psycopg2-binary
 groq
 requests
-python-dotenv
-=======
-fastapi
-uvicorn
-requests
->>>>>>> 2bc2d0798fb7d23a89bde97b82311497385e7ffb

@@ -1,49 +1,61 @@
-from groq import Groq
-import requests
 import os
+import requests
+from groq import Groq
 
 groq = Groq(api_key=os.getenv("GROQ_API_KEY"))
 
 AI_MODE = os.getenv("AI_MODE", "fast")
-OLLAMA_URL = os.getenv("OLLAMA_URL", "http://localhost:11434")
 
+
+# 🧠 DETECTOR DE INTENCIÓN
+def detect_mode(text):
+    t = text.lower()
+
+    if any(x in t for x in ["código", "programa", "bug", "error", "python", "js"]):
+        return "dev"
+    if any(x in t for x in ["tarea", "explica", "resume"]):
+        return "study"
+    if any(x in t for x in ["idea", "historia", "crear"]):
+        return "creator"
+    return "general"
+
+
+# 🧠 PROMPT MAESTRO
+def build_prompt(msg, memory, mode):
+    context = "\n".join([m["content"] for m in memory[-8:]])
+
+    base = """
+Eres Juliet, una IA nivel experto.
+
+REGLAS:
+- Usa títulos en **negrita**
+- Respuestas cortas y claras
+- Divide en párrafos
+- Código siempre en bloques ```
+- Explica como humano, no como robot
+- Si es complejo: estructura completa
+"""
+
+    extra = {
+        "dev": "Modo programador: código completo, limpio y funcional.",
+        "study": "Modo estudio: simplifica y explica paso a paso.",
+        "creator": "Modo creativo: ideas potentes y organizadas."
+    }.get(mode, "")
+
+    return base + extra + "\n" + context + "\nUsuario: " + msg
+
+
+# 🚀 IA REAL (GROQ)
 def ask_groq(prompt):
-    res = groq.chat.completions.create(
+    r = groq.chat.completions.create(
         model="llama3-70b-8192",
-        messages=[
-            {"role": "system", "content": "Eres Juliet, IA clara, profesional y útil."},
-            {"role": "user", "content": prompt}
-        ]
+        messages=[{"role": "user", "content": prompt}]
     )
-    return res.choices[0].message.content
+    return r.choices[0].message.content
 
 
-def ask_ollama(prompt):
-    try:
-        res = requests.post(
-            f"{OLLAMA_URL}/api/generate",
-            json={
-                "model": "deepseek-coder",
-                "prompt": prompt,
-                "stream": False
-            },
-            timeout=10
-        )
-        return res.json().get("response", "Error Ollama")
-    except:
-        return None
-
-
-def ask_ai(prompt):
-    # PRODUCCIÓN → Groq
-    if AI_MODE == "fast":
-        return ask_groq(prompt)
-
-    # LOCAL → intenta Ollama primero
-    if AI_MODE == "local":
-        local = ask_ollama(prompt)
-        if local:
-            return local
-
-    # fallback siempre
+# 🧠 ROUTER FINAL
+def ask_ai(msg, memory):
+    mode = detect_mode(msg)
+    prompt = build_prompt(msg, memory, mode)
     return ask_groq(prompt)

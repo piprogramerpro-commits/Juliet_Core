@@ -1,40 +1,48 @@
-let mode = "general";
-
-function setMode(m){ mode = m; }
-
 async function send(){
-let input = document.getElementById("input");
-let msg = input.value;
-input.value="";
+    let input = document.getElementById("input");
+    let msg = input.value;
+    input.value="";
 
-add(msg,"user");
+    addUser(msg);
 
-let res = await fetch("/chat",{
-method:"POST",
-headers:{"Content-Type":"application/json"},
-body:JSON.stringify({message:msg,mode:mode})
-});
+    let res = await fetch("/chat",{
+        method:"POST",
+        headers:{"Content-Type":"application/json"},
+        body:JSON.stringify({message:msg})
+    });
 
-let reader = res.body.getReader();
-let decoder = new TextDecoder();
-
-let full="";
-let box = add("", "bot");
-
-while(true){
-const {done,value}=await reader.read();
-if(done) break;
-
-full+=decoder.decode(value);
-box.innerText=full;
-}
+    let data = await res.json();
+    renderBot(data.response);
 }
 
-function add(text,type){
-let chat=document.getElementById("chat");
-let div=document.createElement("div");
-div.className=type;
-div.innerText=text;
-chat.appendChild(div);
-return div;
+function addUser(text){
+    chat.innerHTML += `<div class="msg"><div class="bubble">${text}</div></div>`;
+}
+
+function renderBot(text){
+    let container = document.createElement("div");
+    container.className="msg";
+
+    let avatar = `<div class="avatar">⭐👑</div>`;
+    let bubble = document.createElement("div");
+    bubble.className="bubble";
+
+    container.innerHTML = avatar;
+    container.appendChild(bubble);
+    chat.appendChild(container);
+
+    let parts = text.split("\n\n");
+
+    parts.forEach(p=>{
+        if(p.includes("```")){
+            let code = p.replace(/```/g,"");
+            bubble.innerHTML += `
+            <div class="code">
+                <div class="copy" onclick="navigator.clipboard.writeText(\`${code}\`)">📋</div>
+                <pre>${code}</pre>
+            </div>`;
+        } else {
+            bubble.innerHTML += `<p>${p.replace(/\*\*(.*?)\*\*/g,"<b>$1</b>")}</p>`;
+        }
+    });
 }
