@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html>
+<head>
+<link rel="stylesheet" href="/static/auth.css">
+</head>
+<body>
+
+<div class="card">
+<h2>⭐ Juliet AI</h2>
+
+<form method="post">
+<input name="user" placeholder="Usuario">
+<input name="pass" type="password" placeholder="Contraseña">
+<button>Entrar</button>
+</form>
+
+<a href="/register">Crear cuenta</a>
+
+{% if error %}
+<p class="error">{{error}}</p>
+{% endif %}
+
+</div>
+
+</body>
+</html>

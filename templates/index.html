@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html>
+<head>
+<link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+
+<div class="sidebar">
+<h3>⭐ Juliet</h3>
+
+<button onclick="setMode('dev')">🔧 Código</button>
+<button onclick="setMode('creator')">✍️ Contenido</button>
+<button onclick="setMode('study')">📚 Estudio</button>
+
+<a href="/logout">Salir</a>
+</div>
+
+<div class="main">
+
+<div class="topbar">
+👤 {{user.username}}
+</div>
+
+<div id="chat"></div>
+
+<div class="input-bar">
+<input id="input" placeholder="Escribe...">
+<button onclick="send()">Enviar</button>
+</div>
+
+</div>
+
+<script src="/static/ui.js"></script>
+</body>
+</html>
