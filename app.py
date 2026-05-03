@@ -1,28 +1,31 @@
 import os
 from flask import Flask, request, jsonify
-from engine.ai import ask_ai
+
+from engine.ai import ask_ai, build_prompt
+from engine.memory import save_message, get_memory
 
 app = Flask(__name__)
 
-memory = []
 
 @app.route("/")
 def home():
-    return "⭐👑 Juliet Nivel Dios Activa"
+    return "⭐👑 Juliet AI SaaS LIVE"
 
 
 @app.route("/chat", methods=["POST"])
 def chat():
-    global memory
-
     data = request.json
-    msg = data.get("message", "")
 
-    memory.append({"role": "user", "content": msg})
+    msg = data["message"]
+    chat_id = data.get("chat_id", 1)
 
-    response = ask_ai(msg, memory)
+    memory = get_memory(chat_id)
+    prompt = build_prompt(msg, memory)
 
-    memory.append({"role": "bot", "content": response})
+    response = ask_ai(prompt)
+
+    save_message(chat_id, "user", msg)
+    save_message(chat_id, "bot", response)
 
     return jsonify({"response": response})
 
